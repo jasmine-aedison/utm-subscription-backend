@@ -5,23 +5,30 @@ const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const { initializeFirebase } = require('./config/firebase');
 
-const authRoutes = require('./routes/auth');
-const subscriptionRoutes = require('./routes/subscriptions');
-const webhookRoutes = require('./routes/webhooks');
+const authRoutes = require('./src/routes/auth');
+const subscriptionRoutes = require('./src/routes/subscription');
+const webhookRoutes = require('./src/routes/webhooks');
 const userRoutes = require('./routes/users');
+const paywallRoutes = require('./routes/paywall');
+const adminRoutes = require('./routes/admin');
+const stripeWebhookRoutes = require('./routes/stripeWebhooks');
 const { errorHandler } = require('./middleware/errorHandler');
 const { logger } = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Initialize Firebase Admin SDK (used by src routes/middleware)
+initializeFirebase();
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://utm.app', 'https://www.utm.app'] 
-    : ['http://localhost:3000', 'http://localhost:8080'],
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8080'],
   credentials: true
 }));
 
@@ -55,6 +62,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', paywallRoutes);
+app.use('/admin', adminRoutes);
+app.use('/webhook', stripeWebhookRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
