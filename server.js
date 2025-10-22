@@ -20,6 +20,9 @@ const { logger } = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for hosting platforms like Render
+app.set('trust proxy', 1);
+
 // Initialize Firebase Admin SDK (used by src routes/middleware)
 initializeFirebase();
 
@@ -36,7 +39,10 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  trustProxy: true, // Trust proxy for accurate IP detection
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use('/api/', limiter);
 

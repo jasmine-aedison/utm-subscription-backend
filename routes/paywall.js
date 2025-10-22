@@ -18,6 +18,7 @@ const trialRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
   message: 'Too many trial requests, please try again later.',
+  trustProxy: true, // Trust proxy for accurate IP detection
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -26,6 +27,7 @@ const licenseRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 attempts per window
   message: 'Too many license redemption attempts, please try again later.',
+  trustProxy: true, // Trust proxy for accurate IP detection
   standardHeaders: true,
   legacyHeaders: false
 });
