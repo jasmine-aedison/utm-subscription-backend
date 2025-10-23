@@ -45,8 +45,8 @@ const checkSubscriptionSchema = Joi.object({
 const createCheckoutSessionSchema = Joi.object({
   guest_id: Joi.string().uuid().optional(),
   price_id: Joi.string().required(),
-  cancel_url: Joi.string().uri().required(),
-  success_url: Joi.string().uri().required(),
+  cancel_url: Joi.string().uri().optional(),
+  success_url: Joi.string().uri().optional(),
   customer_email: Joi.string().email().optional(),
   uid: Joi.string().optional()
 });
@@ -271,8 +271,8 @@ router.post('/create-checkout-session', async (req, res) => {
         quantity: 1
       }],
       mode: 'subscription',
-      success_url: success_url,
-      cancel_url: cancel_url,
+      success_url: success_url || 'https://utm-subscription-backend.onrender.com/success',
+      cancel_url: cancel_url || 'https://utm-subscription-backend.onrender.com/cancel',
       metadata
     };
 

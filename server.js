@@ -71,6 +71,50 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Stripe checkout success page
+app.get('/success', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Payment Successful</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .success { color: #28a745; }
+        .message { margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <h1 class="success">✅ Payment Successful!</h1>
+      <p class="message">Your subscription has been activated. You can now close this window and return to the app.</p>
+      <p><small>You can close this window now.</small></p>
+    </body>
+    </html>
+  `);
+});
+
+// Stripe checkout cancel page
+app.get('/cancel', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Payment Cancelled</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .cancel { color: #dc3545; }
+        .message { margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <h1 class="cancel">❌ Payment Cancelled</h1>
+      <p class="message">Your payment was cancelled. You can try again anytime.</p>
+      <p><small>You can close this window now.</small></p>
+    </body>
+    </html>
+  `);
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
