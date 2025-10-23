@@ -17,6 +17,27 @@ router.get('/stripe/test', (req, res) => {
   });
 });
 
+// Test endpoint that bypasses signature verification (for testing only)
+router.post('/stripe/test', express.raw({ type: 'application/json' }), async (req, res) => {
+  logger.info('🧪 Test webhook received (bypassing signature verification)');
+  logger.info(`📦 Body length: ${req.body ? req.body.length : 'undefined'}`);
+  
+  try {
+    // Parse the JSON manually for testing
+    const event = JSON.parse(req.body.toString());
+    logger.info(`✅ Test webhook event type: ${event.type}`);
+    
+    res.json({ 
+      message: 'Test webhook processed successfully',
+      event_type: event.type,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('❌ Test webhook parsing failed:', error);
+    res.status(400).json({ error: 'Failed to parse test webhook' });
+  }
+});
+
 // Stripe webhook handler - must use raw body parser
 router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;

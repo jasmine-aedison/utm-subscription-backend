@@ -48,7 +48,15 @@ app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(compression());
-app.use(express.json({ limit: '10mb' }));
+
+// Skip JSON parsing for webhook routes (they need raw body)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/webhook/')) {
+    return next();
+  }
+  express.json({ limit: '10mb' })(req, res, next);
+});
+
 app.use(express.urlencoded({ extended: true }));
 
 // Logging
