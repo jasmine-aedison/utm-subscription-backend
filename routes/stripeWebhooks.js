@@ -13,7 +13,10 @@ router.get('/stripe/test', (req, res) => {
   res.json({ 
     message: 'Webhook endpoint is working',
     timestamp: new Date().toISOString(),
-    webhook_secret_configured: !!process.env.STRIPE_WEBHOOK_SECRET
+    webhook_secret_configured: !!process.env.STRIPE_WEBHOOK_SECRET,
+    webhook_secret_length: process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.length : 0,
+    webhook_secret_prefix: process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.substring(0, 10) + '...' : 'Not set',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -46,6 +49,10 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
   logger.info('🔔 Stripe webhook received');
   logger.info(`📝 Headers: ${JSON.stringify(req.headers)}`);
   logger.info(`📦 Body length: ${req.body ? req.body.length : 'undefined'}`);
+  logger.info(`🔑 Stripe signature header: ${req.headers['stripe-signature']}`);
+  logger.info(`🔐 Webhook secret configured: ${process.env.STRIPE_WEBHOOK_SECRET ? 'Yes' : 'No'}`);
+  logger.info(`🔐 Webhook secret length: ${process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.length : 'N/A'}`);
+  logger.info(`🔐 Webhook secret starts with: ${process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.substring(0, 10) + '...' : 'N/A'}`);
 
   try {
     // Verify webhook signature
@@ -53,7 +60,12 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     logger.info(`✅ Received Stripe webhook: ${event.type}`);
   } catch (error) {
     logger.error('❌ Webhook signature verification failed:', error);
-    logger.error(`🔍 Webhook secret configured: ${process.env.STRIPE_WEBHOOK_SECRET ? 'Yes' : 'No'}`);
+    logger.error(`🔍 Error details: ${error.message}`);
+    logger.error(`🔍 Error type: ${error.constructor.name}`);
+    logger.error(`🔍 Stripe signature: ${req.headers['stripe-signature']}`);
+    logger.error(`🔍 Body type: ${typeof req.body}`);
+    logger.error(`🔍 Body is Buffer: ${Buffer.isBuffer(req.body)}`);
+    logger.error(`🔍 Body preview: ${req.body ? req.body.toString().substring(0, 100) + '...' : 'undefined'}`);
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
