@@ -74,7 +74,6 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
-app.use('/api/webhooks', webhookRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', paywallRoutes);
 app.use('/admin', adminRoutes);
