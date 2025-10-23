@@ -7,9 +7,24 @@ const Device = require('../models/Device');
 
 const router = express.Router();
 
-// Stripe webhook handler
-router.post('/stripe', async (req, res) => {
+// Test endpoint to verify webhook is reachable
+router.get('/stripe/test', (req, res) => {
+  logger.info('🧪 Webhook test endpoint hit');
+  res.json({ 
+    message: 'Webhook endpoint is working',
+    timestamp: new Date().toISOString(),
+    webhook_secret_configured: !!process.env.STRIPE_WEBHOOK_SECRET
+  });
+});
+
+// Stripe webhook handler - must use raw body parser
+router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
+
+  // Log webhook attempt
+  logger.info('🔔 Stripe webhook received');
+  logger.info(`📝 Headers: ${JSON.stringify(req.headers)}`);
+  logger.info(`📦 Body length: ${req.body ? req.body.length : 'undefined'}`);
 
   try {
     // Verify webhook signature
@@ -17,6 +32,7 @@ router.post('/stripe', async (req, res) => {
     logger.info(`✅ Received Stripe webhook: ${event.type}`);
   } catch (error) {
     logger.error('❌ Webhook signature verification failed:', error);
+    logger.error(`🔍 Webhook secret configured: ${process.env.STRIPE_WEBHOOK_SECRET ? 'Yes' : 'No'}`);
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
