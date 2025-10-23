@@ -1,6 +1,6 @@
 const express = require('express');
 const { verifyIdToken, createCustomToken, getUser, setCustomUserClaims } = require('../config/firebase');
-const User = require('../models/User');
+const PostgresUser = require('../models/PostgresUser');
 const { createCustomer } = require('../config/stripe');
 const { logger } = require('../utils/logger');
 const { validateAuthRequest } = require('../middleware/validation');
@@ -21,7 +21,7 @@ router.post('/verify', async (req, res) => {
     const { uid, email, name, picture } = decodedToken;
 
     // Check if user exists in our database
-    let user = await User.getByUid(uid);
+    let user = await PostgresUser.getByUid(uid);
     
     if (!user) {
       // Create new user
@@ -32,7 +32,7 @@ router.post('/verify', async (req, res) => {
         photoURL: picture
       };
       
-      user = await User.create(userData);
+      user = await PostgresUser.create(userData);
       
       // Create Stripe customer
       try {
@@ -83,7 +83,7 @@ router.get('/me', async (req, res) => {
   try {
     const { uid } = req.user; // Set by auth middleware
     
-    const user = await User.getByUid(uid);
+    const user = await PostgresUser.getByUid(uid);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -108,7 +108,7 @@ router.put('/me', async (req, res) => {
     const { uid } = req.user;
     const { displayName, photoURL } = req.body;
     
-    const user = await User.getByUid(uid);
+    const user = await PostgresUser.getByUid(uid);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -138,7 +138,7 @@ router.delete('/me', async (req, res) => {
   try {
     const { uid } = req.user;
     
-    const user = await User.getByUid(uid);
+    const user = await PostgresUser.getByUid(uid);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -166,7 +166,7 @@ router.post('/refresh-claims', async (req, res) => {
   try {
     const { uid } = req.user;
     
-    const user = await User.getByUid(uid);
+    const user = await PostgresUser.getByUid(uid);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
