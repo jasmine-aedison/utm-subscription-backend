@@ -57,6 +57,12 @@ const redeemLicenseSchema = Joi.object({
   id_token: Joi.string().optional()
 });
 
+const verifyLicenseSchema = Joi.object({
+  key: Joi.string().required().min(1).max(255),
+  uid: Joi.string().optional(),
+  device_id: Joi.string().optional()
+});
+
 const linkGuestSchema = Joi.object({
   guest_id: Joi.string().uuid().required()
 });
@@ -296,6 +302,71 @@ router.post('/create-checkout-session', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to create checkout session'
+    });
+  }
+});
+
+// POST /api/license/verify
+router.post('/license/verify', licenseRateLimit, async (req, res) => {
+  try {
+    // Validate request
+    const { error, value } = verifyLicenseSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { key, uid, device_id } = value;
+
+    // Get license key
+    const licenseKey = await LicenseKey.getByKey(key);
+    if (!licenseKey) {
+      return res.json({ 
+        success: false, 
+        valid: false, 
+        message: 'Invalid or already redeemed license key' 
+      });
+    }
+    
+    // Check if expired
+    if (licenseKey.expires_at && new Date(licenseKey.expires_at) < new Date()) {
+      return res.json({ 
+        success: false, 
+        valid: false, 
+        message: 'License key has expired' 
+      });
+    }
+    
+    // Check if already bound to different user/device
+    if (licenseKey.bound_uid && licenseKey.bound_uid !== uid) {
+      return res.json({ 
+        success: false, 
+        valid: false, 
+        message: 'License key is already bound to another user' 
+      });
+    }
+    
+    if (licenseKey.bound_device_id && licenseKey.bound_device_id !== device_id) {
+      return res.json({ 
+        success: false, 
+        valid: false, 
+        message: 'License key is already bound to another device' 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      valid: true, 
+      message: 'License key is valid',
+      license: licenseKey
+    });
+  } catch (error) {
+    logger.error('❌ Failed to verify license key:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
     });
   }
 });

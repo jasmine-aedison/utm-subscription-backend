@@ -37,12 +37,11 @@ class LicenseKey {
   static async create(licenseData) {
     try {
       const key = LicenseKey.generateKey();
-      const hashedKey = LicenseKey.hashKey(key);
 
       const { data, error } = await supabase
         .from('license_keys')
         .insert({
-          key: hashedKey,
+          key: key, // Store as plain text
           plan_id: licenseData.planId,
           expires_at: licenseData.expiresAt,
           single_use: licenseData.singleUse !== false,
@@ -69,12 +68,11 @@ class LicenseKey {
 
       for (let i = 0; i < count; i++) {
         const key = LicenseKey.generateKey();
-        const hashedKey = LicenseKey.hashKey(key);
 
         const { data, error } = await supabase
           .from('license_keys')
           .insert({
-            key: hashedKey,
+            key: key, // Store as plain text
             plan_id: planId,
             expires_at: options.expiresAt,
             single_use: options.singleUse !== false,
@@ -100,12 +98,11 @@ class LicenseKey {
   // Get license key by key
   static async getByKey(key) {
     try {
-      const hashedKey = LicenseKey.hashKey(key);
-      
+      // Look up by plain text key (not hashed)
       const { data, error } = await supabase
         .from('license_keys')
         .select('*')
-        .eq('key', hashedKey)
+        .eq('key', key)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
