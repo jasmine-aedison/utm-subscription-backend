@@ -54,6 +54,7 @@ const createCheckoutSessionSchema = Joi.object({
 const redeemLicenseSchema = Joi.object({
   key: Joi.string().required().min(1).max(255),
   guest_id: Joi.string().uuid().optional(),
+  email: Joi.string().email().optional(),
   id_token: Joi.string().optional()
 });
 
@@ -383,7 +384,7 @@ router.post('/redeem-license', licenseRateLimit, async (req, res) => {
       });
     }
 
-    const { key, guest_id, id_token } = value;
+    const { key, guest_id, email, id_token } = value;
     const { uid } = req.user || {};
 
     // Get license key
@@ -419,10 +420,14 @@ router.post('/redeem-license', licenseRateLimit, async (req, res) => {
         });
       }
       boundDeviceId = device.id;
+    } else if (email) {
+      // Email-based redemption - create a temporary user subscription
+      // We'll use the email as a temporary identifier
+      boundUid = `email_${email}`;
     } else {
       return res.status(400).json({
         success: false,
-        error: 'Either authentication or guest_id required'
+        error: 'Either authentication, guest_id, or email required'
       });
     }
 
